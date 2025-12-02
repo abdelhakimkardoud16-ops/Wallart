@@ -1,0 +1,409 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  ChevronRight, 
+  ChevronLeft, 
+  Code, 
+  Zap, 
+  Layout, 
+  Terminal, 
+  BarChart2, 
+  PieChart,
+  Github,
+  Maximize2,
+  Moon,
+  Sun
+} from 'lucide-react';
+
+/**
+ * ------------------------------------------------------------------
+ * CONFIGURATION & CONTENT
+ * ------------------------------------------------------------------
+ * Edit this array to change your presentation content.
+ */
+const SLIDES = [
+  {
+    id: 'intro',
+    type: 'title',
+    title: 'The Art of Code',
+    subtitle: 'Creating Advanced Presentations with React & Tailwind',
+    author: 'Presented by Gemini',
+    theme: 'gradient-blue'
+  },
+  {
+    id: 'why',
+    type: 'bullets',
+    title: 'Why Code Your Slides?',
+    icon: <Terminal className="w-8 h-8 text-blue-400" />,
+    items: [
+      'Version Control: Git-manage your talks',
+      'Live Components: Embed working apps directly in slides',
+      'Pixel Perfection: CSS grid/flexbox for exact layout',
+      'Zero Bloat: No 500MB PowerPoint files'
+    ]
+  },
+  {
+    id: 'stack',
+    type: 'cards',
+    title: 'The Modern Stack',
+    subtitle: 'Built with the best tools available',
+    cards: [
+      { title: 'React', icon: <Code />, desc: 'Component-based architecture for reusable slide patterns.' },
+      { title: 'Tailwind', icon: <Layout />, desc: 'Utility-first CSS for rapid, beautiful UI development.' },
+      { title: 'Lucide', icon: <Zap />, desc: 'Crisp, consistent vector icons for visual hierarchy.' }
+    ]
+  },
+  {
+    id: 'demo-code',
+    type: 'code',
+    title: 'Live Code Rendering',
+    language: 'javascript',
+    code: `// The slide you are looking at is an object!
+const slide = {
+  id: 'demo',
+  type: 'code',
+  title: 'Live Code Rendering',
+  code: 'console.log("Hello World");',
+  highlight: true
+};
+
+// Rendered instantly with syntax highlighting
+function renderSlide(slide) {
+  return <CodeBlock content={slide.code} />;
+}`,
+    caption: 'No screenshots. This is real text.'
+  },
+  {
+    id: 'data',
+    type: 'chart',
+    title: 'Dynamic Visualization',
+    subtitle: 'CSS-driven charts that scale infinitely',
+    data: [
+      { label: 'PowerPoint', value: 40, color: 'bg-red-400' },
+      { label: 'Keynote', value: 30, color: 'bg-blue-400' },
+      { label: 'React Deck', value: 95, color: 'bg-emerald-400' },
+    ]
+  },
+  {
+    id: 'quote',
+    type: 'quote',
+    text: "PowerPoint makes us stupid. It's a tool for lazy thinking.",
+    author: "Edward Tufte",
+    sub: "(...but React decks make us smart!)"
+  },
+  {
+    id: 'end',
+    type: 'title',
+    title: 'Thank You',
+    subtitle: 'Press ← to rewind or edit the code to build your own.',
+    theme: 'dark'
+  }
+];
+
+/**
+ * ------------------------------------------------------------------
+ * COMPONENTS
+ * ------------------------------------------------------------------
+ */
+
+const Card = ({ title, icon, desc, delay }) => (
+  <div 
+    className="bg-white/10 backdrop-blur-md p-6 rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-500 transform hover:-translate-y-2 opacity-0 animate-fade-in-up"
+    style={{ animationDelay: `${delay}ms`, animationFillMode: 'forwards' }}
+  >
+    <div className="mb-4 text-emerald-400">{icon}</div>
+    <h3 className="text-xl font-bold mb-2 text-white">{title}</h3>
+    <p className="text-gray-300 text-sm">{desc}</p>
+  </div>
+);
+
+const CodeBlock = ({ code, language, caption }) => (
+  <div className="w-full max-w-4xl mx-auto opacity-0 animate-fade-in" style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}>
+    <div className="bg-gray-900 rounded-lg overflow-hidden shadow-2xl border border-gray-700">
+      <div className="flex items-center px-4 py-2 bg-gray-800 border-b border-gray-700">
+        <div className="flex space-x-2">
+          <div className="w-3 h-3 rounded-full bg-red-500" />
+          <div className="w-3 h-3 rounded-full bg-yellow-500" />
+          <div className="w-3 h-3 rounded-full bg-green-500" />
+        </div>
+        <span className="ml-4 text-xs text-gray-400 font-mono">{language}</span>
+      </div>
+      <div className="p-6 overflow-x-auto">
+        <pre className="font-mono text-sm text-blue-300 leading-relaxed">
+          <code>{code}</code>
+        </pre>
+      </div>
+    </div>
+    {caption && <p className="text-center mt-4 text-gray-500 italic text-sm">{caption}</p>}
+  </div>
+);
+
+const Chart = ({ data }) => (
+  <div className="flex items-end justify-center space-x-8 h-64 w-full max-w-3xl mx-auto mt-12">
+    {data.map((d, i) => (
+      <div key={i} className="flex flex-col items-center group w-24">
+        <div className="relative w-full flex items-end h-64 bg-gray-800/50 rounded-t-lg overflow-hidden">
+          <div 
+            className={`w-full ${d.color} transition-all duration-1000 ease-out opacity-90 group-hover:opacity-100`}
+            style={{ height: '0%', animation: `grow 1s ease-out forwards ${i * 200}ms` }}
+          >
+            <style>{`
+              @keyframes grow {
+                to { height: ${d.value}%; }
+              }
+            `}</style>
+          </div>
+        </div>
+        <div className="mt-4 text-center">
+          <span className="block font-bold text-lg text-white">{d.value}%</span>
+          <span className="text-xs text-gray-400 uppercase tracking-wider">{d.label}</span>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+/**
+ * ------------------------------------------------------------------
+ * SLIDE LAYOUTS
+ * ------------------------------------------------------------------
+ */
+
+const TitleSlide = ({ slide }) => (
+  <div className="flex flex-col items-center justify-center h-full text-center px-8">
+    <div className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+      <h1 className="text-7xl md:text-8xl font-black mb-6 tracking-tight opacity-0 animate-fade-in-down">
+        {slide.title}
+      </h1>
+    </div>
+    <h2 className="text-2xl md:text-3xl text-gray-400 font-light mb-12 max-w-2xl opacity-0 animate-fade-in" style={{ animationDelay: '300ms', animationFillMode: 'forwards' }}>
+      {slide.subtitle}
+    </h2>
+    {slide.author && (
+      <div className="mt-8 flex items-center space-x-3 opacity-0 animate-fade-in" style={{ animationDelay: '600ms', animationFillMode: 'forwards' }}>
+        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm">
+          G
+        </div>
+        <span className="text-gray-300 font-medium tracking-wide">{slide.author}</span>
+      </div>
+    )}
+  </div>
+);
+
+const BulletSlide = ({ slide }) => (
+  <div className="h-full flex flex-col justify-center px-12 md:px-24 max-w-6xl mx-auto">
+    <div className="flex items-center space-x-4 mb-12 opacity-0 animate-slide-right">
+      {slide.icon}
+      <h2 className="text-4xl md:text-5xl font-bold text-white">{slide.title}</h2>
+    </div>
+    <ul className="space-y-6">
+      {slide.items.map((item, idx) => (
+        <li 
+          key={idx} 
+          className="flex items-center space-x-4 text-xl md:text-2xl text-gray-300 opacity-0 animate-slide-up"
+          style={{ animationDelay: `${idx * 150 + 300}ms`, animationFillMode: 'forwards' }}
+        >
+          <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
+const CardsSlide = ({ slide }) => (
+  <div className="h-full flex flex-col justify-center px-12 md:px-24">
+    <div className="text-center mb-16 opacity-0 animate-fade-in-down">
+      <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">{slide.title}</h2>
+      <p className="text-xl text-gray-400">{slide.subtitle}</p>
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto w-full">
+      {slide.cards.map((card, idx) => (
+        <Card key={idx} {...card} delay={idx * 200 + 300} />
+      ))}
+    </div>
+  </div>
+);
+
+const CodeSlide = ({ slide }) => (
+  <div className="h-full flex flex-col justify-center px-4 md:px-12">
+    <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-8 opacity-0 animate-fade-in-down">
+      {slide.title}
+    </h2>
+    <CodeBlock code={slide.code} language={slide.language} caption={slide.caption} />
+  </div>
+);
+
+const ChartSlide = ({ slide }) => (
+  <div className="h-full flex flex-col justify-center px-4 md:px-12">
+    <div className="text-center mb-12 opacity-0 animate-fade-in-down">
+      <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">{slide.title}</h2>
+      <p className="text-xl text-gray-400">{slide.subtitle}</p>
+    </div>
+    <Chart data={slide.data} />
+  </div>
+);
+
+const QuoteSlide = ({ slide }) => (
+  <div className="h-full flex flex-col justify-center items-center px-12 md:px-32 text-center">
+    <div className="relative">
+      <span className="absolute -top-12 -left-12 text-8xl text-gray-700 font-serif opacity-50">"</span>
+      <h2 className="text-4xl md:text-6xl font-serif text-white italic leading-tight opacity-0 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'forwards' }}>
+        {slide.text}
+      </h2>
+      <span className="absolute -bottom-12 -right-12 text-8xl text-gray-700 font-serif opacity-50">"</span>
+    </div>
+    <div className="mt-12 opacity-0 animate-fade-in" style={{ animationDelay: '800ms', animationFillMode: 'forwards' }}>
+      <p className="text-xl font-bold text-blue-400">{slide.author}</p>
+      {slide.sub && <p className="text-sm text-gray-500 mt-1">{slide.sub}</p>}
+    </div>
+  </div>
+);
+
+/**
+ * ------------------------------------------------------------------
+ * MAIN APP
+ * ------------------------------------------------------------------
+ */
+
+export default function App() {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isDark, setIsDark] = useState(true);
+  const [direction, setDirection] = useState(0); // -1 or 1
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'Space') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentSlide]);
+
+  const nextSlide = useCallback(() => {
+    if (currentSlide < SLIDES.length - 1) {
+      setDirection(1);
+      setCurrentSlide(prev => prev + 1);
+    }
+  }, [currentSlide]);
+
+  const prevSlide = useCallback(() => {
+    if (currentSlide > 0) {
+      setDirection(-1);
+      setCurrentSlide(prev => prev - 1);
+    }
+  }, [currentSlide]);
+
+  const renderSlide = () => {
+    const slide = SLIDES[currentSlide];
+    // Key prop ensures react remounts component to trigger animations
+    const props = { key: currentSlide, slide };
+    
+    switch (slide.type) {
+      case 'title': return <TitleSlide {...props} />;
+      case 'bullets': return <BulletSlide {...props} />;
+      case 'cards': return <CardsSlide {...props} />;
+      case 'code': return <CodeSlide {...props} />;
+      case 'chart': return <ChartSlide {...props} />;
+      case 'quote': return <QuoteSlide {...props} />;
+      default: return <TitleSlide {...props} />;
+    }
+  };
+
+  return (
+    <div className={`w-full h-screen overflow-hidden font-sans transition-colors duration-500 ${isDark ? 'bg-black text-white' : 'bg-gray-100 text-gray-900'}`}>
+      
+      {/* Global Styles for Animations */}
+      <style>{`
+        @keyframes fade-in-down {
+          0% { opacity: 0; transform: translateY(-20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fade-in-up {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fade-in {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        @keyframes slide-right {
+          0% { opacity: 0; transform: translateX(-30px); }
+          100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slide-up {
+          0% { opacity: 0; transform: translateY(20px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-down { animation: fade-in-down 0.8s ease-out forwards; }
+        .animate-fade-in-up { animation: fade-in-up 0.8s ease-out forwards; }
+        .animate-fade-in { animation: fade-in 1s ease-out forwards; }
+        .animate-slide-right { animation: slide-right 0.6s ease-out forwards; }
+        .animate-slide-up { animation: slide-up 0.5s ease-out forwards; }
+      `}</style>
+
+      {/* Main Slide Stage */}
+      <main className={`relative w-full h-full flex flex-col transition-all duration-500`}>
+        {/* Background Accents (only in dark mode) */}
+        {isDark && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-blue-900/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2" />
+            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-emerald-900/20 rounded-full blur-[100px] translate-x-1/2 translate-y-1/2" />
+          </div>
+        )}
+        
+        {/* Slide Content */}
+        <div className="flex-grow relative z-10">
+          {renderSlide()}
+        </div>
+
+        {/* Controls Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 flex justify-between items-end z-50 pointer-events-none">
+          
+          {/* Progress Indicator */}
+          <div className="flex items-center space-x-2 pointer-events-auto">
+             <span className="text-xs font-mono text-gray-500">
+              {currentSlide + 1} / {SLIDES.length}
+            </span>
+            <div className="h-1 w-32 bg-gray-800 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${((currentSlide + 1) / SLIDES.length) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Navigation Buttons */}
+          <div className="flex items-center space-x-4 pointer-events-auto">
+            <button 
+              onClick={() => setIsDark(!isDark)}
+              className="p-2 rounded-full hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            
+            <div className="flex space-x-2 bg-gray-900/80 backdrop-blur border border-white/10 rounded-full p-1">
+              <button 
+                onClick={prevSlide}
+                disabled={currentSlide === 0}
+                className="p-2 rounded-full hover:bg-white/10 text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <button 
+                onClick={nextSlide}
+                disabled={currentSlide === SLIDES.length - 1}
+                className="p-2 rounded-full hover:bg-blue-600 bg-blue-600/20 text-blue-400 hover:text-white disabled:opacity-30 disabled:bg-transparent disabled:text-gray-500 transition-all"
+              >
+                <ChevronRight size={24} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
